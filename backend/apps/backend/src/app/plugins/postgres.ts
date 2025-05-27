@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import fastifyPostgres from '@fastify/postgres';
 import 'dotenv/config';
+import { createTables } from '../db/schema';
 
 /**
  * This plugins adds some utilities to handle http errors
@@ -10,6 +11,17 @@ import 'dotenv/config';
  */
 export default fp(async function (fastify: FastifyInstance) {
   fastify.register(fastifyPostgres, {
-    connectionString: `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@localhost:5432/${process.env.POSTGRES_DB}`,
+    connectionString: process.env.DATABASE_URL,
+  });
+
+  // Create tables when the server starts
+  fastify.addHook('onReady', async () => {
+    try {
+      await createTables(fastify);
+      fastify.log.info('Database tables created successfully');
+    } catch (error) {
+      fastify.log.error('Error creating database tables:', error);
+      throw error;
+    }
   });
 });
