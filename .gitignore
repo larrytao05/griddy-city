@@ -134,3 +134,18 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Nx specific
+.nx/
+tmp/
+
+# Project specific
+backend/dist/
+frontend/dist/
+frontend/.next/
+frontend/.nuxt/

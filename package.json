@@ -2,6 +2,7 @@
   "type": "module",
   "devDependencies": {
     "@types/node": "^22.15.21",
+    "@types/pg": "^8.15.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
@@ -11,6 +12,8 @@
     "@fastify/type-provider-json-schema-to-ts": "^5.0.0",
     "@fastify/type-provider-typebox": "^5.1.0",
     "@sinclair/typebox": "^0.34.33",
-    "fastify": "^5.3.3"
+    "dotenv": "^16.5.0",
+    "fastify": "^5.3.3",
+    "pg": "^8.16.0"
   }
 }
