@@ -69,5 +69,37 @@
         "command": "docker build -f apps/backend/Dockerfile . -t @backend/backend"
       }
     }
+  },
+  "dependencies": {
+    "@fastify/autoload": "~6.0.3",
+    "@fastify/postgres": "^6.0.2",
+    "@fastify/sensible": "~6.0.2",
+    "dotenv": "^16.5.0",
+    "fastify": "^5.3.3",
+    "fastify-plugin": "~5.0.1",
+    "pg": "^8.16.0",
+    "zod": "^3.25.30",
+    "csv-parse": "^5.5.3",
+    "pino-pretty": "^10.3.1"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.app.json",
+    "clean": "rimraf .turbo node_modules",
+    "dev": "tsx watch src/main.ts",
+    "lint": "eslint \"src/**/*.ts*\"",
+    "start": "node dist/main",
+    "test": "vitest",
+    "import-gtfs": "ts-node src/app/db/scripts/import-gtfs-cli.ts",
+    "reset-db": "ts-node src/app/db/scripts/reset-db.ts"
+  },
+  "devDependencies": {
+    "@types/node": "~18.16.9",
+    "@types/pg": "^8.15.2",
+    "eslint": "^9.8.0",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
+    "typescript": "~5.7.2",
+    "vitest": "^1.0.4"
   }
 }

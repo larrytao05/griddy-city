@@ -1,31 +1,28 @@
 version: '3.8'
 
 services:
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: larrytao
+      POSTGRES_PASSWORD: griddy
+      POSTGRES_DB: griddy-city
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/apps/backend/db/init:/docker-entrypoint-initdb.d
+
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: apps/backend/Dockerfile
     ports:
       - "3000:3000"
     environment:
-      - POSTGRES_USER=larrytao
-      - POSTGRES_PASSWORD=griddy
-      - POSTGRES_DB=griddy-city
-      - DATABASE_URL=postgres://larrytao:griddy@db:5432/griddy-city
-      - NODE_ENV=development
+      - DATABASE_URL=postgres://larrytao:griddy@database:5432/griddy-city
     depends_on:
-      - db
-
-  db:
-    image: postgres:16-alpine
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=larrytao
-      - POSTGRES_PASSWORD=griddy
-      - POSTGRES_DB=griddy-city
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - database
 
 volumes:
   postgres_data: 
