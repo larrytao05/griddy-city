@@ -1,6 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import axios from 'axios';
+import * as protobuf from 'protobufjs';
+import * as path from 'path';
 
 // Schema for vehicle position
 const vehiclePositionSchema = z.object({
@@ -68,18 +70,44 @@ export default async function (fastify: FastifyInstance) {
   });
 
   // Update all vehicle positions
-  fastify.post('/', async (request, reply) => {
+  fastify.post('/', {
+    schema: {
+      body: {
+        type: 'object',
+        properties: {},
+        additionalProperties: false
+      }
+    },
+    config: {
+      contentType: 'application/json'
+    }
+  }, async (request, reply) => {
     try {
       const response = await axios.get('https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace', {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-          'Accept': '/',
+          'Accept': 'application/x-protobuf',
           'Accept-Encoding': 'gzip, deflate, br',
           'Connection': 'keep-alive'
-        }
+        },
+        responseType: 'arraybuffer'
       });
-      const feed = response.data;
+
+      // Load the GTFS-realtime proto definition
+      const protoPath = path.join(process.cwd(), 'apps/backend/src/app/proto/gtfs-realtime.proto');
+      const root = await protobuf.load(protoPath);
+      const FeedMessage = root.lookupType('transit_realtime.FeedMessage');
+      
+      // Decode the protobuf message
+      const message = FeedMessage.decode(new Uint8Array(response.data));
+      const feed = FeedMessage.toObject(message, {
+        longs: String,
+        enums: String,
+        bytes: String,
+      });
+
       const positions = [];
+      const seenVehicles = new Set();
 
       // Parse all positions first
       for (const entity of feed.entity) {
@@ -102,6 +130,12 @@ export default async function (fastify: FastifyInstance) {
             occupancy_status: vehicle.occupancyStatus
           };
 
+          // Skip if we've already seen this trip
+          if (seenVehicles.has(vehiclePosition.trip_id)) {
+            continue;
+          }
+          seenVehicles.add(vehiclePosition.trip_id);
+
           // Validate the position data
           const validatedPosition = vehiclePositionSchema.parse(vehiclePosition);
           positions.push(validatedPosition);
@@ -114,10 +148,7 @@ export default async function (fastify: FastifyInstance) {
         // Start a transaction
         await client.query('BEGIN');
 
-        // Clear existing positions
-        await client.query('TRUNCATE TABLE vehicle_positions');
-
-        // Insert all new positions
+        // Insert or update all positions
         if (positions.length > 0) {
           const values = positions.map((pos, i) => {
             const offset = i * 11;
@@ -145,7 +176,19 @@ export default async function (fastify: FastifyInstance) {
               vehicle_id, trip_id, route_id, latitude, longitude, 
               bearing, speed, current_stop_id, current_stop_status,
               congestion_level, occupancy_status
-            ) VALUES ${values}`,
+            ) VALUES ${values}
+            ON CONFLICT (trip_id) DO UPDATE SET
+              vehicle_id = EXCLUDED.vehicle_id,
+              route_id = EXCLUDED.route_id,
+              latitude = EXCLUDED.latitude,
+              longitude = EXCLUDED.longitude,
+              bearing = EXCLUDED.bearing,
+              speed = EXCLUDED.speed,
+              current_stop_id = EXCLUDED.current_stop_id,
+              current_stop_status = EXCLUDED.current_stop_status,
+              congestion_level = EXCLUDED.congestion_level,
+              occupancy_status = EXCLUDED.occupancy_status,
+              updated_at = CURRENT_TIMESTAMP`,
             params
           );
         }
@@ -163,8 +206,18 @@ export default async function (fastify: FastifyInstance) {
       return { message: 'Positions updated successfully', count: positions.length };
     } catch (error) {
       fastify.log.error('Error updating vehicle positions:', error);
+      if (error instanceof Error) {
+        fastify.log.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+      }
       reply.code(500);
-      return { error: 'Failed to update vehicle positions' };
+      return { 
+        error: 'Failed to update vehicle positions',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      };
     }
   });
 }

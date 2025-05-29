@@ -46,7 +46,27 @@ export async function createStaticTables(fastify: FastifyInstance) {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    fastify.log.info('Static tables created successfully');
+    // Create vehicle positions table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS vehicle_positions (
+        id SERIAL PRIMARY KEY,
+        vehicle_id VARCHAR(255) NOT NULL,
+        trip_id VARCHAR(255) NOT NULL UNIQUE,
+        route_id VARCHAR(255) NOT NULL,
+        latitude DECIMAL(10, 8) NOT NULL,
+        longitude DECIMAL(11, 8) NOT NULL,
+        bearing FLOAT,
+        speed FLOAT,
+        current_stop_id VARCHAR(255),
+        current_stop_status VARCHAR(50),
+        congestion_level VARCHAR(50),
+        occupancy_status VARCHAR(50),
+        timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    fastify.log.info('All tables created successfully');
   } finally {
     client.release();
   }
@@ -64,8 +84,8 @@ export async function createRealtimeTable(fastify: FastifyInstance) {
     await client.query(`
       CREATE TABLE vehicle_positions (
         id SERIAL PRIMARY KEY,
-        vehicle_id VARCHAR(255) NOT NULL UNIQUE,
-        trip_id VARCHAR(255) NOT NULL,
+        vehicle_id VARCHAR(255) NOT NULL,
+        trip_id VARCHAR(255) NOT NULL UNIQUE,
         route_id VARCHAR(255) NOT NULL,
         latitude DECIMAL(10, 8) NOT NULL,
         longitude DECIMAL(11, 8) NOT NULL,
