@@ -88,7 +88,6 @@
     "dev": "tsx watch src/main.ts",
     "lint": "eslint \"src/**/*.ts*\"",
     "start": "node dist/main",
-    "test": "vitest",
     "import-gtfs": "ts-node src/app/db/scripts/import-gtfs-cli.ts",
     "reset-db": "ts-node src/app/db/scripts/reset-db.ts"
   },
@@ -99,7 +98,6 @@
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "tsx": "^4.7.0",
-    "typescript": "~5.7.2",
-    "vitest": "^1.0.4"
+    "typescript": "~5.7.2"
   }
 }
