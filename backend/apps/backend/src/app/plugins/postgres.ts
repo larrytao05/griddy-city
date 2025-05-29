@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import fastifyPostgres from '@fastify/postgres';
 import 'dotenv/config';
-import { createTables } from '../db/schema';
+import { createStaticTables, createRealtimeTable } from '../db/schema';
 
 /**
  * This plugins adds some utilities to handle http errors
@@ -17,7 +17,8 @@ export default fp(async function (fastify: FastifyInstance) {
   // Create tables when the server starts
   fastify.addHook('onReady', async () => {
     try {
-      await createTables(fastify);
+      await createStaticTables(fastify);
+      await createRealtimeTable(fastify);
       fastify.log.info('Database tables created successfully');
     } catch (error) {
       fastify.log.error('Error creating database tables:', error);

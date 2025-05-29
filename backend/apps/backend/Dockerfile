@@ -37,4 +37,4 @@ RUN chown -R backend:backend .
 USER backend
 
 # The compiled output will be in dist
-CMD [ "node", "dist/main.js" ]
+CMD [ "node", "dist/startup.js" ]

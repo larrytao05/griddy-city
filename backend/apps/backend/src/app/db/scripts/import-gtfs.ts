@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as csv from 'csv-parse/sync';
-import { createTables } from '../schema';
+import { createStaticTables } from '../schema';
 
 interface GTFSStop {
   stop_id: string;
@@ -43,7 +43,7 @@ export async function importGTFSData(fastify: FastifyInstance, gtfsPath: string)
     fastify.log.info('Starting GTFS data import...');
     
     client = await fastify.pg.connect();
-    await createTables(fastify);
+    await createStaticTables(fastify);
     
     const stopsPath = path.join(gtfsPath, 'stops.txt');
     const stopTimesPath = path.join(gtfsPath, 'stop_times.txt');
