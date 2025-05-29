@@ -1,7 +1,7 @@
-# griddy-city
-NYC Transit App with better Delay Handling, Interactive Map, and other additional features
+# Griddy City - Improving NYC Transit
 
 ## Description
+NYC Transit App with better Delay Handling, Interactive Map, Dynamic Routing, and other additional features
 
 ## Documentation
 
