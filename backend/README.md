@@ -7,8 +7,8 @@
 - `email`: VARCHAR(255) UNIQUE NOT NULL
 - `password_hash`: VARCHAR(255) NOT NULL
 - `full_name`: VARCHAR(255)
-- `created_at`: TIMESTAMP WITH TIME ZONE
-- `updated_at`: TIMESTAMP WITH TIME ZONE
+- `created_at`: TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+- `updated_at`: TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 
 ### Stops Table
 - `id`: SERIAL PRIMARY KEY
@@ -18,9 +18,9 @@
 - `longitude`: DECIMAL(11, 8) NOT NULL
 - `location_type`: VARCHAR(255)
 - `parent_station`: VARCHAR(255)
-- `transfers`: JSONB DEFAULT '[]'
-- `created_at`: TIMESTAMP WITH TIME ZONE
-- `updated_at`: TIMESTAMP WITH TIME ZONE
+- `transfers`: JSONB DEFAULT '[]'::jsonb
+- `created_at`: TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+- `updated_at`: TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 
 ### Trips Table
 - `id`: SERIAL PRIMARY KEY
@@ -30,9 +30,9 @@
 - `trip_headsign`: VARCHAR(255)
 - `direction_id`: VARCHAR(255)
 - `shape_id`: VARCHAR(255)
-- `stops`: JSONB DEFAULT '[]'
-- `created_at`: TIMESTAMP WITH TIME ZONE
-- `updated_at`: TIMESTAMP WITH TIME ZONE
+- `stops`: JSONB DEFAULT '[]'::jsonb
+- `created_at`: TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+- `updated_at`: TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 
 ### Vehicle Positions Table
 - `id`: SERIAL PRIMARY KEY
@@ -47,9 +47,22 @@
 - `current_stop_status`: VARCHAR(50)
 - `congestion_level`: VARCHAR(50)
 - `occupancy_status`: VARCHAR(50)
-- `timestamp`: TIMESTAMP WITH TIME ZONE
-- `created_at`: TIMESTAMP WITH TIME ZONE
-- `updated_at`: TIMESTAMP WITH TIME ZONE
+- `timestamp`: TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+- `created_at`: TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+- `updated_at`: TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+
+## Data Management
+
+### Static Data
+- The `users`, `stops`, and `trips` tables are created during server startup
+- GTFS static data is imported during container initialization
+- These tables persist across server restarts
+
+### Real-time Data
+- The `vehicle_positions` table is recreated on each server startup to ensure fresh data
+- Vehicle positions are updated in real-time from the MTA GTFS-realtime feed
+- Each vehicle position is uniquely identified by its `trip_id`
+- The table includes additional fields for vehicle status and occupancy information
 
 ## API Routes
 
@@ -72,8 +85,8 @@
 ## Development
 
 ### Prerequisites
-- Node.js 16+
-- PostgreSQL 14+
+- Node.js 18+
+- PostgreSQL 16+
 - Docker (optional)
 
 ### Setup
@@ -101,8 +114,9 @@ docker compose up
 ```
 
 ### Database Management
-- The database tables are automatically created on server startup
-- GTFS data is imported during container startup
+- Static tables (users, stops, trips) are automatically created on server startup
+- GTFS static data is imported during container startup
+- Vehicle positions table is recreated on each startup for fresh real-time data
 - Vehicle positions are updated in real-time from the MTA GTFS-realtime feed
 
 ## Error Responses

@@ -4,7 +4,7 @@
 # Tip: Modify "docker-build" options in project.json to change docker build args.
 #
 # Run the container with `docker run -p 3000:3000 -t @backend/backend`.
-FROM docker.io/node:lts-alpine
+FROM node:18-alpine
 
 ENV HOST=0.0.0.0
 ENV PORT=3000
