@@ -22,6 +22,7 @@ async function main() {
       // Drop existing tables
       server.log.info('Dropping existing tables...');
       await client.query(`
+        DROP TABLE IF EXISTS vehicle_positions CASCADE;
         DROP TABLE IF EXISTS trips CASCADE;
         DROP TABLE IF EXISTS stops CASCADE;
         DROP TABLE IF EXISTS users CASCADE;
@@ -62,6 +63,24 @@ async function main() {
           direction_id VARCHAR(255),
           shape_id VARCHAR(255),
           stops JSONB DEFAULT '[]'::jsonb,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE vehicle_positions (
+          id SERIAL PRIMARY KEY,
+          vehicle_id VARCHAR(255) NOT NULL UNIQUE,
+          trip_id VARCHAR(255) NOT NULL,
+          route_id VARCHAR(255) NOT NULL,
+          latitude DECIMAL(10, 8) NOT NULL,
+          longitude DECIMAL(11, 8) NOT NULL,
+          bearing FLOAT,
+          speed FLOAT,
+          current_stop_id VARCHAR(255),
+          current_stop_status VARCHAR(50),
+          congestion_level VARCHAR(50),
+          occupancy_status VARCHAR(50),
+          timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );

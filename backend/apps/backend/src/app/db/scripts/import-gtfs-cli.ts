@@ -1,6 +1,5 @@
 import Fastify from 'fastify';
 import { importGTFSData } from './import-gtfs';
-import * as path from 'path';
 import 'dotenv/config';
 import postgresPlugin from '../../plugins/postgres';
 import * as fs from 'fs';
@@ -8,10 +7,7 @@ import * as fs from 'fs';
 async function main() {
   const server = Fastify({
     logger: {
-      level: 'debug',
-      transport: {
-        target: 'pino-pretty'
-      }
+      level: 'debug'
     }
   });
 
@@ -21,7 +17,7 @@ async function main() {
     server.log.info('PostgreSQL plugin registered successfully');
 
     // Get the GTFS data path from command line argument or use default
-    const gtfsPath = process.argv[2] || path.join(__dirname, '../../../../resources/gtfs_subway');
+    const gtfsPath = process.argv[2] || '/app/apps/backend/resources/gtfs_subway';
     server.log.info(`Using GTFS data path: ${gtfsPath}`);
     
     // Verify the path exists

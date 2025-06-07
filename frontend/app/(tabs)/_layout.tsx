@@ -1,43 +1,40 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
-
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useThemeContext } from '@/context/ThemeContext';
+import { TabBar } from '@/components/TabBar';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { colors } = useThemeContext();
 
   return (
     <Tabs
+      initialRouteName="map"
+      tabBar={(props) => <TabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
+        tabBarStyle: {
+          display: 'none', // Hide default tab bar since we're using our custom one
+        },
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="map"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Map',
+          tabBarLabel: 'Map',
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="routes"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Routes',
+          tabBarLabel: 'Routes',
+        }}
+      />
+      <Tabs.Screen
+        name="alerts"
+        options={{
+          title: 'Alerts',
+          tabBarLabel: 'Alerts',
         }}
       />
     </Tabs>
