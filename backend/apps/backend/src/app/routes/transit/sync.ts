@@ -34,56 +34,10 @@ const vehiclePositionSchema = z.object({
 });
 
 export default async function (fastify: FastifyInstance) {
-  // Get all current vehicle positions
-  fastify.get('/', async (request, reply) => {
-    const client = await fastify.pg.connect();
+  // Sync vehicle positions from MTA feed
+  fastify.get('/vehicles', async (request, reply) => {
     try {
-      const result = await client.query(
-        'SELECT * FROM vehicle_positions'
-      );
-      return result.rows;
-    } finally {
-      client.release();
-    }
-  });
-
-  // Get position of a specific vehicle
-  fastify.get('/:vehicle_id', async (request, reply) => {
-    const { vehicle_id } = request.params as { vehicle_id: string };
-    const client = await fastify.pg.connect();
-    
-    try {
-      const result = await client.query(
-        `SELECT * FROM vehicle_positions WHERE vehicle_id = $1`,
-        [vehicle_id]
-      );
-      
-      if (result.rows.length === 0) {
-        reply.code(404);
-        return { error: 'Vehicle not found' };
-      }
-      
-      return result.rows;
-    } finally {
-      client.release();
-    }
-  });
-
-  // Update all vehicle positions
-  fastify.post('/', {
-    schema: {
-      body: {
-        type: 'object',
-        properties: {},
-        additionalProperties: false
-      }
-    },
-    config: {
-      contentType: 'application/json'
-    }
-  }, async (request, reply) => {
-    try {
-      const response = await axios.get('https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace', {
+      const response = await axios.get('https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs', {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
           'Accept': 'application/x-protobuf',
@@ -220,4 +174,4 @@ export default async function (fastify: FastifyInstance) {
       };
     }
   });
-}
+} 
