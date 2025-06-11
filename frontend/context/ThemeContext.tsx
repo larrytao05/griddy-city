@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ColorScheme, getColors } from '../constants/Colors';
+import { ColorScheme, getColors } from '../constants/ThemeColors';
 import * as SecureStore from 'expo-secure-store';
 import { useColorScheme as useSystemColorScheme } from 'react-native';
 

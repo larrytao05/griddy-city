@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet } from "react-native";
-import { Colors } from "@/constants/Colors";
+import { Colors } from "@/constants/ThemeColors";
 import { useThemeContext } from "@/context/ThemeContext";
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';

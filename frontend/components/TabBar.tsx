@@ -4,7 +4,7 @@ import { useThemeContext } from '../context/ThemeContext';
 import { TabButton } from './TabButton';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
-export function TabBar({ state, navigation }: BottomTabBarProps) {
+export function TabBar({ state }: BottomTabBarProps) {
   const { colors } = useThemeContext();
 
   const icons = [
@@ -28,11 +28,6 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
     'Alerts'
   ];
 
-  const handlePress = (index: number) => {
-    const route = state.routes[index];
-    navigation.navigate(route.name);
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: colors.neutral }]}>
       {icons.map((icon, index) => (
@@ -41,7 +36,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
           icon={state.index === index ? icon.filled : icon.outline}
           label={labels[index]}
           isActive={state.index === index}
-          onPress={() => handlePress(index)}
+          href={`/(tabs)/${state.routes[index].name}` as '/(tabs)/map' | '/(tabs)/routes' | '/(tabs)/alerts'}
         />
       ))}
     </View>

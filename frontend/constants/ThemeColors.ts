@@ -4,6 +4,7 @@ export const Colors = {
     secondaryAccent: '#E36729',
     lightAccent: '#6EABFA',
     neutral: '#FAFAFA',
+    neutralMid: '#E0E0E0',
     neutralOpposite: '#121212',
   },
   dark: {
@@ -11,6 +12,7 @@ export const Colors = {
     secondaryAccent: '#E36729',
     lightAccent: '#6EABFA',
     neutral: '#121212',
+    neutralMid: '#3D3D3D',
     neutralOpposite: '#FAFAFA',
   },
 };

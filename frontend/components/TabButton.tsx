@@ -1,16 +1,17 @@
 import React, { useEffect, useRef } from 'react';
-import { TouchableOpacity, StyleSheet, View, Text, Animated } from 'react-native';
+import { StyleSheet, Text, Animated, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../context/ThemeContext';
+import { Link } from 'expo-router';
 
 type TabButtonProps = {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   isActive: boolean;
-  onPress: () => void;
+  href: '/(tabs)/map' | '/(tabs)/routes' | '/(tabs)/alerts';
 };
 
-export function TabButton({ icon, label, isActive, onPress }: TabButtonProps) {
+export function TabButton({ icon, label, isActive, href }: TabButtonProps) {
   const { colors } = useThemeContext();
   const scaleAnim = useRef(new Animated.Value(isActive ? 1 : 0.8)).current;
   const opacityAnim = useRef(new Animated.Value(isActive ? 1 : 0)).current;
@@ -32,30 +33,28 @@ export function TabButton({ icon, label, isActive, onPress }: TabButtonProps) {
   }, [isActive, scaleAnim, opacityAnim]);
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={1}
-      style={styles.button}
-    >
-      <Animated.View
-        style={[
-          styles.background,
-          {
-            backgroundColor: `${colors.secondaryAccent}50`,
-            opacity: opacityAnim,
-            transform: [{ scaleX: scaleAnim }],
-          },
-        ]}
-      />
-      <Ionicons
-        name={icon}
-        size={24}
-        color={isActive ? colors.secondaryAccent : colors.neutralOpposite}
-      />
-      <Text style={[styles.title, { color: isActive ? colors.secondaryAccent : colors.neutralOpposite }]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
+    <Link href={href} style={styles.button} asChild>
+      <Pressable>
+        <Animated.View
+          style={[
+            styles.background,
+            {
+              backgroundColor: `${colors.secondaryAccent}50`,
+              opacity: opacityAnim,
+              transform: [{ scaleX: scaleAnim }],
+            },
+          ]}
+        />
+        <Ionicons
+          name={icon}
+          size={24}
+          color={isActive ? colors.secondaryAccent : colors.neutralOpposite}
+        />
+        <Text style={[styles.title, { color: isActive ? colors.secondaryAccent : colors.neutralOpposite }]}>
+          {label}
+        </Text>
+      </Pressable>
+    </Link>
   );
 }
 
