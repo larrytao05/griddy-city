@@ -91,7 +91,7 @@
     "dev": "tsx watch src/main.ts",
     "lint": "eslint \"src/**/*.ts*\"",
     "start": "node dist/main",
-    "import-gtfs": "ts-node src/app/db/scripts/import-gtfs-cli.ts",
+    "import-gtfs": "tsx src/app/db/scripts/import-gtfs-cli.ts",
     "reset-db": "ts-node src/app/db/scripts/reset-db.ts"
   },
   "devDependencies": {

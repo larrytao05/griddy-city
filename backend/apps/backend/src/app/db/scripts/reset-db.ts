@@ -25,6 +25,7 @@ async function main() {
         DROP TABLE IF EXISTS vehicle_positions CASCADE;
         DROP TABLE IF EXISTS trips CASCADE;
         DROP TABLE IF EXISTS stops CASCADE;
+        DROP TABLE IF EXISTS stations CASCADE;
         DROP TABLE IF EXISTS users CASCADE;
       `);
       server.log.info('Tables dropped successfully');
@@ -41,15 +42,25 @@ async function main() {
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE stations (
+          id SERIAL PRIMARY KEY,
+          station_id VARCHAR(255) UNIQUE NOT NULL,
+          station_name VARCHAR(255) NOT NULL,
+          latitude DECIMAL(10, 8) NOT NULL,
+          longitude DECIMAL(11, 8) NOT NULL,
+          transfers JSONB DEFAULT '[]'::jsonb,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE stops (
           id SERIAL PRIMARY KEY,
           stop_id VARCHAR(255) UNIQUE NOT NULL,
           stop_name VARCHAR(255) NOT NULL,
+          station_id VARCHAR(255) NOT NULL REFERENCES stations(station_id),
+          direction_id VARCHAR(255) NOT NULL,
           latitude DECIMAL(10, 8) NOT NULL,
           longitude DECIMAL(11, 8) NOT NULL,
-          location_type VARCHAR(255),
-          parent_station VARCHAR(255),
-          transfers JSONB DEFAULT '[]'::jsonb,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );

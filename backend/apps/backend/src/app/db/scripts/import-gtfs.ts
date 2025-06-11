@@ -11,6 +11,7 @@ interface GTFSStop {
   stop_lon: string;
   location_type?: string;
   parent_station?: string;
+  direction_id?: string;
 }
 
 interface GTFSStopTime {
@@ -35,6 +36,15 @@ interface GTFSTransfer {
   to_stop_id: string;
   transfer_type: string;
   min_transfer_time?: string;
+}
+
+interface Station {
+  station_id: string;
+  station_name: string;
+  latitude: number;
+  longitude: number;
+  transfers: any[];
+  stops: GTFSStop[];
 }
 
 export async function importGTFSData(fastify: FastifyInstance, gtfsPath: string) {
@@ -89,20 +99,42 @@ export async function importGTFSData(fastify: FastifyInstance, gtfsPath: string)
       skip_empty_lines: true
     }) as GTFSTransfer[];
 
-    // Create a map of stops for quick lookup
-    const stopsMap = new Map(stops.map(stop => [stop.stop_id, stop]));
-
-    // Process transfers and group them by from_stop_id
-    const transfersByStop = transfers.reduce((acc, transfer) => {
-      if (!acc[transfer.from_stop_id]) {
-        acc[transfer.from_stop_id] = [];
+    // Group stops by station
+    const stations = new Map<string, Station>();
+    
+    for (const stop of stops) {
+      // Use stop_name as station identifier
+      const stationName = stop.stop_name;
+      
+      if (!stations.has(stationName)) {
+        stations.set(stationName, {
+          station_id: `station_${stationName.replace(/\s+/g, '_').toLowerCase()}`,
+          station_name: stationName,
+          latitude: parseFloat(stop.stop_lat),
+          longitude: parseFloat(stop.stop_lon),
+          transfers: [],
+          stops: []
+        });
       }
       
-      const toStop = stopsMap.get(transfer.to_stop_id);
-      if (toStop) {
-        acc[transfer.from_stop_id].push({
-          stop_id: transfer.to_stop_id,
-          stop_name: toStop.stop_name,
+      const station = stations.get(stationName)!;
+      station.stops.push(stop);
+    }
+
+    // Process transfers and group them by station
+    const transfersByStation = transfers.reduce((acc, transfer) => {
+      const fromStop = stops.find(s => s.stop_id === transfer.from_stop_id);
+      const toStop = stops.find(s => s.stop_id === transfer.to_stop_id);
+      
+      if (fromStop && toStop) {
+        const fromStationName = fromStop.stop_name;
+        if (!acc[fromStationName]) {
+          acc[fromStationName] = [];
+        }
+        
+        acc[fromStationName].push({
+          station_id: `station_${toStop.stop_name.replace(/\s+/g, '_').toLowerCase()}`,
+          station_name: toStop.stop_name,
           transfer_type: transfer.transfer_type,
           min_transfer_time: transfer.min_transfer_time ? parseInt(transfer.min_transfer_time) : undefined
         });
@@ -110,34 +142,53 @@ export async function importGTFSData(fastify: FastifyInstance, gtfsPath: string)
       return acc;
     }, {} as Record<string, any[]>);
 
-    // Import stops with their transfers
-    for (const stop of stops) {
-      const stopTransfers = transfersByStop[stop.stop_id] || [];
-      const params = [
-        stop.stop_id,
-        stop.stop_name,
-        parseFloat(stop.stop_lat),
-        parseFloat(stop.stop_lon),
-        stop.location_type || null,
-        stop.parent_station || null,
-        JSON.stringify(stopTransfers)
-      ];
+    // Import stations
+    for (const [stationName, station] of stations) {
+      const stationTransfers = transfersByStation[stationName] || [];
       
       await client.query(
-        `INSERT INTO stops (
-          stop_id, stop_name, latitude, longitude,
-          location_type, parent_station, transfers
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-        ON CONFLICT (stop_id) DO UPDATE SET
-          stop_name = EXCLUDED.stop_name,
+        `INSERT INTO stations (
+          station_id, station_name, latitude, longitude, transfers
+        ) VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (station_id) DO UPDATE SET
+          station_name = EXCLUDED.station_name,
           latitude = EXCLUDED.latitude,
           longitude = EXCLUDED.longitude,
-          location_type = EXCLUDED.location_type,
-          parent_station = EXCLUDED.parent_station,
           transfers = EXCLUDED.transfers,
           updated_at = CURRENT_TIMESTAMP`,
-        params
+        [
+          station.station_id,
+          station.station_name,
+          station.latitude,
+          station.longitude,
+          JSON.stringify(stationTransfers)
+        ]
       );
+
+      // Import child stops
+      for (const stop of station.stops) {
+        await client.query(
+          `INSERT INTO stops (
+            stop_id, stop_name, station_id, direction_id,
+            latitude, longitude
+          ) VALUES ($1, $2, $3, $4, $5, $6)
+          ON CONFLICT (stop_id) DO UPDATE SET
+            stop_name = EXCLUDED.stop_name,
+            station_id = EXCLUDED.station_id,
+            direction_id = EXCLUDED.direction_id,
+            latitude = EXCLUDED.latitude,
+            longitude = EXCLUDED.longitude,
+            updated_at = CURRENT_TIMESTAMP`,
+          [
+            stop.stop_id,
+            stop.stop_name,
+            station.station_id,
+            stop.direction_id || '0', // Default to 0 if not specified
+            parseFloat(stop.stop_lat),
+            parseFloat(stop.stop_lon)
+          ]
+        );
+      }
     }
 
     // Group stop times by trip_id
