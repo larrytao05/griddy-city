@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region, Polyline } from 'react-native-maps';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -6,6 +6,7 @@ import { ProfileButton } from '@/components/ProfileButton';
 import { useThemeContext } from '@/context/ThemeContext';
 import { markers } from '@/assets/markers';
 import { LINE_COLORS, SUBWAY_LINES } from '@/assets/subway-lines';
+import * as Location from 'expo-location';
 
 const initialRegion = {
   latitude: 40.7535,
@@ -59,7 +60,28 @@ const mapStyle = [
 export default function Map() {
     const mapRef = useRef<MapView>(null);
     const [selectedStation, setSelectedStation] = useState<string | null>(null);
+    const [userLocation, setUserLocation] = useState<Region | null>(null);
     const { colors } = useThemeContext();
+
+    useEffect(() => {
+        (async () => {
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission Denied', 'Location permission is required to show your current location.');
+                return;
+            }
+
+            let location = await Location.getCurrentPositionAsync({});
+            const newRegion = {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            };
+            setUserLocation(newRegion);
+            focusMap(newRegion);
+        })();
+    }, []);
 
     const focusMap = (region: Region) => {
         if (mapRef.current) {
@@ -84,9 +106,9 @@ export default function Map() {
                 style={styles.map}
                 initialRegion={initialRegion}
                 customMapStyle={mapStyle}
-                showsUserLocation={false}
-                showsMyLocationButton={false}
-                showsCompass={false}
+                showsUserLocation={true}
+                showsMyLocationButton={true}
+                showsCompass={true}
                 showsScale={false}
                 showsBuildings={false}
                 showsTraffic={false}
@@ -106,7 +128,6 @@ export default function Map() {
                     />
                 ))}
 
-                {/* Render a Polyline for each subway line */}
                 {Object.entries(SUBWAY_LINES).map(([line, stops], i) => (
                     <Polyline
                         key={line}
