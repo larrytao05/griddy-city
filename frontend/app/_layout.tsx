@@ -1,4 +1,4 @@
-import { Stack, Redirect } from 'expo-router';
+import { Stack } from 'expo-router';
 import { ThemeProvider } from '../context/ThemeContext';
 import { View, StyleSheet } from 'react-native';
 
@@ -22,6 +22,13 @@ function RootLayoutNav() {
             presentation: 'modal',
             headerShown: false,
           }}
+        />
+        <Stack.Screen 
+        name="search"
+        options={{
+          animation: 'none',
+          headerShown: false
+        }}
         />
       </Stack>
     </View>

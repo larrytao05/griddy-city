@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ColorScheme, getColors } from '../constants/ThemeColors';
 import * as SecureStore from 'expo-secure-store';
-import { useColorScheme as useSystemColorScheme } from 'react-native';
+import { useColorScheme as useSystemColorScheme, Appearance } from 'react-native';
 
 const THEME_KEY = 'user-theme-preference';
 
@@ -43,6 +43,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       await SecureStore.setItemAsync(THEME_KEY, scheme);
       setColorScheme(scheme);
+      // Update system theme
+      Appearance.setColorScheme(scheme);
     } catch (error) {
       console.log('Error saving theme:', error);
     }

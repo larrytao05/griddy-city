@@ -3,6 +3,7 @@ import { View, StyleSheet, Alert } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region, Polyline } from 'react-native-maps';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ProfileButton } from '@/components/ProfileButton';
+import { SearchBar } from '@/components/SearchButton';
 import { useThemeContext } from '@/context/ThemeContext';
 import { markers } from '@/assets/markers';
 import { LINE_COLORS, SUBWAY_LINES } from '@/assets/subway-lines';
@@ -61,7 +62,7 @@ export default function Map() {
     const mapRef = useRef<MapView>(null);
     const [selectedStation, setSelectedStation] = useState<string | null>(null);
     const [userLocation, setUserLocation] = useState<Region | null>(null);
-    const { colors } = useThemeContext();
+    const { colors, colorScheme } = useThemeContext();
 
     useEffect(() => {
         (async () => {
@@ -108,12 +109,13 @@ export default function Map() {
                 customMapStyle={mapStyle}
                 showsUserLocation={true}
                 showsMyLocationButton={true}
-                showsCompass={true}
+                showsCompass={false}
                 showsScale={false}
                 showsBuildings={false}
                 showsTraffic={false}
                 showsIndoors={false}
                 showsPointsOfInterest={false}
+                userInterfaceStyle={colorScheme}
                 ref={mapRef}
             >
                 {markers.map((marker) => (
@@ -138,9 +140,13 @@ export default function Map() {
                         strokeColor={LINE_COLORS[line] || '#000000'}
                         strokeWidth={6}
                         zIndex={i + 1}
+                        tappable={true}
                     />
                 ))}
             </MapView>
+            <View style={styles.searchContainer}>
+                <SearchBar />
+            </View>
         </View>
     );
 }
@@ -157,6 +163,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         zIndex: 1,
+    },
+    searchContainer: {
+        position: 'absolute',
+        bottom: 105,
+        left: 20,
+        right: 20,
+        flex: 1,
+        alignItems: 'center'
     },
     map: {
         width: '100%',
