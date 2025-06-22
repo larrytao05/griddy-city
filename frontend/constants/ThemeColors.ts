@@ -5,6 +5,7 @@ export const Colors = {
     lightAccent: '#9EC8FF',
     neutral: '#FAFAFA',
     neutralMid: '#DEDEDE',
+    neutralSubtitle: '#3D3D3D',
     neutralOpposite: '#121212',
   },
   dark: {
@@ -13,6 +14,7 @@ export const Colors = {
     lightAccent: '#9EC8FF',
     neutral: '#121212',
     neutralMid: '#3D3D3D',
+    neutralSubtitle: '#DEDEDE',
     neutralOpposite: '#FAFAFA',
   },
 };

@@ -3,7 +3,7 @@ import { useThemeContext } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-export function SearchBar() {
+export function SearchButton() {
     const { colors } = useThemeContext();
     const router = useRouter();
 

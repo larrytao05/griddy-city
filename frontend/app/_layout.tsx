@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { ThemeProvider } from '../context/ThemeContext';
+import { LocationProvider } from '@/context/LocationContext';
 import { View, StyleSheet } from 'react-native';
 
 function RootLayoutNav() {
@@ -38,7 +39,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <RootLayoutNav />
+      <LocationProvider>
+        <RootLayoutNav />
+      </LocationProvider>
     </ThemeProvider>
   );
 }

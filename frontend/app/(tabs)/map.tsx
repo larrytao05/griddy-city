@@ -3,11 +3,11 @@ import { View, StyleSheet, Alert } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region, Polyline } from 'react-native-maps';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ProfileButton } from '@/components/ProfileButton';
-import { SearchBar } from '@/components/SearchButton';
+import { SearchButton } from '@/components/SearchButton';
 import { useThemeContext } from '@/context/ThemeContext';
+import { useLocation } from '@/context/LocationContext';
 import { markers } from '@/assets/markers';
 import { LINE_COLORS, SUBWAY_LINES } from '@/assets/subway-lines';
-import * as Location from 'expo-location';
 
 const initialRegion = {
   latitude: 40.7535,
@@ -61,28 +61,21 @@ const mapStyle = [
 export default function Map() {
     const mapRef = useRef<MapView>(null);
     const [selectedStation, setSelectedStation] = useState<string | null>(null);
-    const [userLocation, setUserLocation] = useState<Region | null>(null);
     const { colors, colorScheme } = useThemeContext();
+    const { userLocation } = useLocation();
 
+    // Focus map on user location when it becomes available
     useEffect(() => {
-        (async () => {
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Permission Denied', 'Location permission is required to show your current location.');
-                return;
-            }
-
-            let location = await Location.getCurrentPositionAsync({});
+        if (userLocation && mapRef.current) {
             const newRegion = {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
+                latitude: userLocation.lat,
+                longitude: userLocation.lng,
                 latitudeDelta: 0.01,
                 longitudeDelta: 0.01,
             };
-            setUserLocation(newRegion);
             focusMap(newRegion);
-        })();
-    }, []);
+        }
+    }, [userLocation]);
 
     const focusMap = (region: Region) => {
         if (mapRef.current) {
@@ -107,8 +100,8 @@ export default function Map() {
                 style={styles.map}
                 initialRegion={initialRegion}
                 customMapStyle={mapStyle}
-                showsUserLocation={true}
-                showsMyLocationButton={true}
+                showsUserLocation={!!userLocation}
+                showsMyLocationButton={!!userLocation}
                 showsCompass={false}
                 showsScale={false}
                 showsBuildings={false}
@@ -145,7 +138,7 @@ export default function Map() {
                 ))}
             </MapView>
             <View style={styles.searchContainer}>
-                <SearchBar />
+                <SearchButton />
             </View>
         </View>
     );
