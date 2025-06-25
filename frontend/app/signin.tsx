@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -8,12 +8,22 @@ import { SubwayLogo } from '@/components/SubwayLogo';
 
 export default function SignIn() {
   const { colors } = useThemeContext();
-  const { signIn } = useAuth();
+  const { signIn, isLoading, error, clearError } = useAuth();
   const router = useRouter();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Clear error when user starts typing
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (error) clearError();
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    if (error) clearError();
+  };
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -21,19 +31,11 @@ export default function SignIn() {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const success = await signIn(email, password);
-      if (success) {
-        router.replace('/(tabs)/map');
-      } else {
-        Alert.alert('Error', 'Invalid email or password');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
-    } finally {
-      setIsLoading(false);
+    const success = await signIn(email, password);
+    if (success) {
+      router.replace('/(tabs)/map');
     }
+    // Error handling is now done in AuthContext
   };
 
   const navigateToSignUp = () => {
@@ -54,6 +56,14 @@ export default function SignIn() {
         </View>
 
         <View style={styles.form}>
+          {/* Error Message Display */}
+          {error && (
+            <View style={[styles.errorContainer, { backgroundColor: '#FEE2E2', borderColor: '#EF4444' }]}>
+              <Ionicons name="alert-circle" size={20} color="#EF4444" />
+              <Text style={[styles.errorText, { color: '#EF4444' }]}>{error.message}</Text>
+            </View>
+          )}
+
           <View style={[styles.inputContainer, { backgroundColor: '#0F4C75' }]}>
             <Ionicons name="mail-outline" size={20} color={colors.lightAccent} />
             <TextInput
@@ -61,10 +71,11 @@ export default function SignIn() {
               placeholder="Email"
               placeholderTextColor={colors.lightAccent}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              editable={!isLoading}
             />
           </View>
 
@@ -75,9 +86,10 @@ export default function SignIn() {
               placeholder="Password"
               placeholderTextColor={colors.lightAccent}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={handlePasswordChange}
               secureTextEntry
               autoCapitalize="none"
+              editable={!isLoading}
             />
           </View>
 
@@ -85,8 +97,8 @@ export default function SignIn() {
             style={[
               styles.signInButton, 
               { 
-                backgroundColor: isFormComplete ? colors.accent : '#6B7280',
-                opacity: isFormComplete ? 1 : 0.6
+                backgroundColor: isFormComplete && !isLoading ? colors.accent : '#6B7280',
+                opacity: isFormComplete && !isLoading ? 1 : 0.6
               }
             ]}
             onPress={handleSignIn}
@@ -95,8 +107,8 @@ export default function SignIn() {
             <Text style={[
               styles.signInText, 
               { 
-                color: isFormComplete ? '#FFFFFF' : '#E5E7EB',
-                fontWeight: isFormComplete ? 'bold' : 'normal'
+                color: isFormComplete && !isLoading ? '#FFFFFF' : '#E5E7EB',
+                fontWeight: isFormComplete && !isLoading ? 'bold' : 'normal'
               }
             ]}>
               {isLoading ? 'Signing In...' : 'Sign In'}
@@ -108,7 +120,7 @@ export default function SignIn() {
           <Text style={[styles.footerText, { color: colors.neutralSubtitle }]}>
             Don't have an account?{' '}
           </Text>
-          <Pressable onPress={navigateToSignUp}>
+          <Pressable onPress={navigateToSignUp} disabled={isLoading}>
             <Text style={[styles.linkText, { color: colors.accent }]}>Sign Up</Text>
           </Pressable>
         </View>
@@ -139,6 +151,20 @@ const styles = StyleSheet.create({
   form: {
     gap: 16,
     marginBottom: 30,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',

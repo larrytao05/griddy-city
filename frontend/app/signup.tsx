@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -8,14 +8,34 @@ import { SubwayLogo } from '@/components/SubwayLogo';
 
 export default function SignUp() {
   const { colors } = useThemeContext();
-  const { signUp } = useAuth();
+  const { signUp, isLoading, error, clearError } = useAuth();
   const router = useRouter();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Clear error when user starts typing
+  const handleNameChange = (text: string) => {
+    setName(text);
+    if (error) clearError();
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (error) clearError();
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    if (error) clearError();
+  };
+
+  const handleConfirmPasswordChange = (text: string) => {
+    setConfirmPassword(text);
+    if (error) clearError();
+  };
 
   const handleSignUp = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -33,19 +53,11 @@ export default function SignUp() {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const success = await signUp(email, password, name);
-      if (success) {
-        router.replace('/(tabs)/map');
-      } else {
-        Alert.alert('Error', 'Failed to create account. Please try again.');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
-    } finally {
-      setIsLoading(false);
+    const success = await signUp(email, password, name);
+    if (success) {
+      router.replace('/(tabs)/map');
     }
+    // Error handling is now done in AuthContext
   };
 
   const navigateToSignIn = () => {
@@ -71,6 +83,14 @@ export default function SignUp() {
         </View>
 
         <View style={styles.form}>
+          {/* Error Message Display */}
+          {error && (
+            <View style={[styles.errorContainer, { backgroundColor: '#FEE2E2', borderColor: '#EF4444' }]}>
+              <Ionicons name="alert-circle" size={20} color="#EF4444" />
+              <Text style={[styles.errorText, { color: '#EF4444' }]}>{error.message}</Text>
+            </View>
+          )}
+
           <View style={[styles.inputContainer, { backgroundColor: '#0F4C75' }]}>
             <Ionicons name="person-outline" size={20} color={colors.lightAccent} />
             <TextInput
@@ -78,9 +98,10 @@ export default function SignUp() {
               placeholder="Full Name"
               placeholderTextColor={colors.lightAccent}
               value={name}
-              onChangeText={setName}
+              onChangeText={handleNameChange}
               autoCapitalize="words"
               autoCorrect={false}
+              editable={!isLoading}
             />
           </View>
 
@@ -91,10 +112,11 @@ export default function SignUp() {
               placeholder="Email"
               placeholderTextColor={colors.lightAccent}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              editable={!isLoading}
             />
           </View>
 
@@ -105,9 +127,10 @@ export default function SignUp() {
               placeholder="Password"
               placeholderTextColor={colors.lightAccent}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={handlePasswordChange}
               secureTextEntry
               autoCapitalize="none"
+              editable={!isLoading}
             />
           </View>
 
@@ -118,9 +141,10 @@ export default function SignUp() {
               placeholder="Confirm Password"
               placeholderTextColor={colors.lightAccent}
               value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              onChangeText={handleConfirmPasswordChange}
               secureTextEntry
               autoCapitalize="none"
+              editable={!isLoading}
             />
           </View>
 
@@ -128,8 +152,8 @@ export default function SignUp() {
             style={[
               styles.signUpButton, 
               { 
-                backgroundColor: isFormComplete ? colors.accent : '#6B7280',
-                opacity: isFormComplete ? 1 : 0.6
+                backgroundColor: isFormComplete && !isLoading ? colors.accent : '#6B7280',
+                opacity: isFormComplete && !isLoading ? 1 : 0.6
               }
             ]}
             onPress={handleSignUp}
@@ -138,8 +162,8 @@ export default function SignUp() {
             <Text style={[
               styles.signUpText, 
               { 
-                color: isFormComplete ? '#FFFFFF' : '#E5E7EB',
-                fontWeight: isFormComplete ? 'bold' : 'normal'
+                color: isFormComplete && !isLoading ? '#FFFFFF' : '#E5E7EB',
+                fontWeight: isFormComplete && !isLoading ? 'bold' : 'normal'
               }
             ]}>
               {isLoading ? 'Creating Account...' : 'Create Account'}
@@ -151,7 +175,7 @@ export default function SignUp() {
           <Text style={[styles.footerText, { color: colors.neutralSubtitle }]}>
             Already have an account?{' '}
           </Text>
-          <Pressable onPress={navigateToSignIn}>
+          <Pressable onPress={navigateToSignIn} disabled={isLoading}>
             <Text style={[styles.linkText, { color: colors.accent }]}>Sign In</Text>
           </Pressable>
         </View>
@@ -182,6 +206,20 @@ const styles = StyleSheet.create({
   form: {
     gap: 16,
     marginBottom: 30,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
