@@ -1,9 +1,9 @@
-import { View, StyleSheet, TextInput, Pressable, Text, FlatList } from 'react-native';
+import { View, StyleSheet, TextInput, Pressable, Text, FlatList, Animated } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
 import { getColors } from '@/constants/ThemeColors';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useLocation } from '@/context/LocationContext';
 import { SearchResultItem, SearchResult } from '@/components/SearchResultItem';
 
@@ -17,7 +17,8 @@ export default function SearchScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchType, setSearchType] = useState<SearchType>('location');
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     // Debounced search function
     const debouncedSearch = useCallback(
@@ -27,7 +28,7 @@ export default function SearchScreen() {
                 return;
             }
 
-            setIsLoading(true);
+            setIsSearching(true);
             try {
                 const params = new URLSearchParams({ q: query });
                 if (userLocation) {
@@ -37,7 +38,7 @@ export default function SearchScreen() {
 
                 //IMPORTANT: If you're testing the frontend on your phone, replace localhost
                 //with your computer's ip address. That's the only way the backend will work.
-                //You may also need to allow the backend past your computers firewall liked I did
+                //You may also need to allow the backend past your computers firewall like I did
                 const url = `http://localhost:3000/search/autocomplete?${params}`;
                 
                 const controller = new AbortController();
@@ -58,7 +59,7 @@ export default function SearchScreen() {
                 console.error('Search error:', error);
                 setSearchResults([]);
             } finally {
-                setIsLoading(false);
+                setIsSearching(false);
             }
         }, 300),
         [userLocation]
@@ -71,11 +72,45 @@ export default function SearchScreen() {
     };
 
     // Handle result selection
-    const handleResultSelect = (result: SearchResult) => {
-        // TODO: integrate geocoding API to navigate user to address' coordinates
-        router.push({
-            pathname: '/(tabs)/map'
+    const handleResultSelect = async (result: SearchResult) => {
+        setIsRedirecting(true);
+        const params = new URLSearchParams({
+            address: result.address,
+            name: result.address 
         });
+
+        if (userLocation) {
+            params.append('lat', String(userLocation.lat));
+            params.append('lng', String(userLocation.lng));
+        }
+
+        try {
+            //TODO: Make url private/add API key auth
+            const url = `http://localhost:3000/search/geocode?${params.toString()}`;
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Geocode failed with status: ${response.status}`);
+            }
+
+            const data = await response.json()
+
+            router.push({
+                pathname: '/(tabs)/map',
+                params: {
+                    id: result.mapbox_id,
+                    lat: data.coordinates[1],
+                    lng: data.coordinates[0],
+                    address: result.address,
+                    name: result.name
+                }
+            });
+        } catch (error) {
+            console.error('Geocode error: ', error);
+        } finally {
+            setIsRedirecting(false);
+        }
     };
 
     const onIconPress = () => {
@@ -111,9 +146,9 @@ export default function SearchScreen() {
             {/* Search Results */}
             {searchQuery.length > 0 && (
                 <View style={styles.resultsContainer}>
-                    {isLoading ? (
+                    {isSearching ? (
                         <View style={styles.loadingContainer}>
-                            <Text style={[styles.loadingText, { color: colors.lightAccent }]}>
+                            <Text style={[styles.loadingText, { color: colors.accent }]}>
                                 Searching...
                             </Text>
                         </View>
@@ -204,5 +239,28 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
         gap: 4,
         borderRadius: 8
-    }
+    },
+    resultItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 16,
+        marginBottom: 8,
+        borderRadius: 8,
+    },
+    pressable: {
+        flex: 1,
+    },
+    resultContent: {
+        flex: 1,
+    },
+    resultName: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    resultAddress: {
+        fontSize: 14,
+        fontWeight: '400',
+    },
 }); 

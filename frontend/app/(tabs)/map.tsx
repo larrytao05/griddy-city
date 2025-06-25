@@ -1,13 +1,20 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, Region, Polyline } from 'react-native-maps';
+//Components
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ProfileButton } from '@/components/ProfileButton';
 import { SearchButton } from '@/components/SearchButton';
+import { LocationModal } from '@/components/LocationModal';
+//Contexts
 import { useThemeContext } from '@/context/ThemeContext';
 import { useLocation } from '@/context/LocationContext';
+//Maps/Subway
 import { markers } from '@/assets/markers';
 import { LINE_COLORS, SUBWAY_LINES } from '@/assets/subway-lines';
+import MapView, { Marker, PROVIDER_GOOGLE, Region, Polyline } from 'react-native-maps';
+//Routing/URLs
+import { useLocalSearchParams, useRouter } from 'expo-router';
+
 
 const initialRegion = {
   latitude: 40.7535,
@@ -58,24 +65,53 @@ const mapStyle = [
   }
 ];
 
+interface LocationProps{
+    name: string,
+    address: string,
+    lat: number,
+    lng: number,
+}
+
 export default function Map() {
     const mapRef = useRef<MapView>(null);
     const [selectedStation, setSelectedStation] = useState<string | null>(null);
     const { colors, colorScheme } = useThemeContext();
     const { userLocation } = useLocation();
+    const [searchParams, setSearchParams] = useState(useLocalSearchParams());
+    const [selectedLocation, setSelectedLocation] = useState<LocationProps | null>(null);
+    const router = useRouter();
 
-    // Focus map on user location when it becomes available
+    // Focus map on search params or user location when it becomes available
     useEffect(() => {
-        if (userLocation && mapRef.current) {
-            const newRegion = {
-                latitude: userLocation.lat,
-                longitude: userLocation.lng,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-            };
-            focusMap(newRegion);
+        if (mapRef.current) {
+            if (searchParams.lat && searchParams.lng && searchParams.address) {
+                const newRegion = {
+                    latitude: Number(searchParams.lat),
+                    longitude: Number(searchParams.lng),
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                };
+                focusMap(newRegion)
+
+                setSelectedLocation({
+                    name: searchParams.name as string || 'Unknown Location',
+                    address: searchParams.address as string,
+                    lat: Number(searchParams.lat),
+                    lng: Number(searchParams.lng),
+                });
+            }
+            else if (userLocation) {
+                const newRegion = {
+                    latitude: userLocation.lat,
+                    longitude: userLocation.lng,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                };
+                focusMap(newRegion);
+            }
+            else focusMap(initialRegion);
         }
-    }, [userLocation]);
+    }, [userLocation, searchParams]);
 
     const focusMap = (region: Region) => {
         if (mapRef.current) {
@@ -89,6 +125,15 @@ export default function Map() {
     const onRegionChange = () => {
         focusMap(initialRegion);
     };
+
+    const onLocationModalClose = () => {
+        //Reset selected location
+        setSelectedLocation(null);
+
+        //Reset url and stored params
+        router.setParams({});
+        setSearchParams({});
+    }
 
     return (
         <View style={styles.container}>
@@ -140,6 +185,10 @@ export default function Map() {
             <View style={styles.searchContainer}>
                 <SearchButton />
             </View>
+            <LocationModal
+                location={selectedLocation}
+                onClose={onLocationModalClose}
+            />
         </View>
     );
 }

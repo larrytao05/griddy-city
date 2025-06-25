@@ -46,17 +46,30 @@ export default async function (fastify: FastifyInstance) {
 
     //Geocode using Geocoding API
     fastify.get('/geocode', async (request, reply) => {
-        const { address } = request.query as { address?: string };
+        const { name, address, lat, lng } = request.query as {
+            name?: string
+            address?: string
+            lat?: string
+            lng?: string
+        };
         if (!address) return reply.status(400).send({ error: 'Missing address parameter' });
         if (!MAPBOX_TOKEN) return reply.status(500).send({ error: 'Mapbox token not configured' });
 
 
         const params = new URLSearchParams({
             access_token: MAPBOX_TOKEN,
-            q: address,
+            q: name + ', ' + address + ', NYC',
             autocomplete: 'true',
-            limit: '1'
+            country: 'US',
+            limit: '1',
         });
+
+        if (lat && lng) {
+            params.append('proximity', `${lng},${lat}`); // Mapbox expects "longitude,latitude"
+        } else {
+            // Fallback to NYC coordinates if no user location
+            params.append('proximity', '-74.006,40.7128');
+        }
 
         const url = `https://api.mapbox.com/search/geocode/v6/forward?${params.toString()}`;
         try {
