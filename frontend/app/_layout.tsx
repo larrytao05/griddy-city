@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { ThemeProvider } from '../context/ThemeContext';
 import { LocationProvider } from '@/context/LocationContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { View, StyleSheet } from 'react-native';
 
 function RootLayoutNav() {
@@ -31,6 +32,18 @@ function RootLayoutNav() {
           headerShown: false
         }}
         />
+        <Stack.Screen
+          name="signin"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="signup"
+          options={{
+            headerShown: false,
+          }}
+        />
       </Stack>
     </View>
   );
@@ -38,11 +51,13 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <LocationProvider>
-        <RootLayoutNav />
-      </LocationProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <LocationProvider>
+          <RootLayoutNav />
+        </LocationProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 
