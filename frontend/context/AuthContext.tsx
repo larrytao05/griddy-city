@@ -33,6 +33,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearError = () => setError(null);
 
   useEffect(() => {
+    // Check for existing session on app startup
+    const checkInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          console.log('Found existing session for:', session.user.email);
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.name
+          });
+        }
+      } catch (error) {
+        console.error('Error checking initial session:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkInitialSession();
+
     // Set up auth state listener for real-time auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -57,9 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             message: 'Authentication state error. Please try again.',
             code: 'AUTH_STATE_ERROR'
           });
-        } finally {
-          // Set loading to false after initial auth check
-          setIsLoading(false);
         }
       }
     );
