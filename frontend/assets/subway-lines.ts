@@ -14,7 +14,9 @@ export const LINE_COLORS: Record<string, string> = {
   'N': '#FCCC0A',    // Yellow
   'Q': '#FCCC0A',    // Yellow
   'R': '#FCCC0A',    // Yellow
-  'S': '#808183',    // Grey
+  'S': '#808183',    // Grey (Shuttle)
+  'FS': '#808183',   // Franklin Av Shuttle
+  'GS': '#808183',   // Grand Central Shuttle
   'W': '#FCCC0A',    // Yellow
   'Z': '#996633',    // Brown
   '1': '#EE352E',    // Red
@@ -22,8 +24,12 @@ export const LINE_COLORS: Record<string, string> = {
   '3': '#EE352E',    // Red
   '4': '#00933C',    // Green
   '5': '#00933C',    // Green
+  '5X': '#00933C',   // Green (5 Express)
   '6': '#00933C',    // Green
+  '6X': '#00933C',   // Green (6 Express)
   '7': '#B933AD',    // Purple
+  '7X': '#B933AD',   // Purple (7 Express)
+  // Add any other variants as needed
 };
 
 // Function to get line from stop ID

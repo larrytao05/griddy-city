@@ -1,16 +1,18 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, ScrollView, TouchableOpacity, Text } from 'react-native';
 //Components
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ProfileButton } from '@/components/ProfileButton';
 import { SearchButton } from '@/components/SearchButton';
 import { LocationModal } from '@/components/LocationModal';
+import { Ionicons } from '@expo/vector-icons';
+import { Animated } from 'react-native';
 //Contexts
 import { useThemeContext } from '@/context/ThemeContext';
 import { useLocation } from '@/context/LocationContext';
 //Maps/Subway
 import { markers } from '@/assets/markers';
-import { LINE_COLORS, SUBWAY_LINES } from '@/assets/subway-lines';
+import { LINE_COLORS } from '@/assets/subway-lines';
 import MapView, { Marker, PROVIDER_GOOGLE, Region, Polyline } from 'react-native-maps';
 //Routing/URLs
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -80,6 +82,22 @@ export default function Map() {
     const [searchParams, setSearchParams] = useState(useLocalSearchParams());
     const [selectedLocation, setSelectedLocation] = useState<LocationProps | null>(null);
     const router = useRouter();
+    // New state for subway shapes
+    const [subwayShapes, setSubwayShapes] = useState<Record<string, { lat: number; lon: number }[][]>>({});
+    // Fetch subway shapes from backend
+    useEffect(() => {
+        const fetchShapes = async () => {
+            try {
+                const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/transit/shapes`);
+                if (!response.ok) throw new Error('Failed to fetch subway shapes');
+                const data = await response.json();
+                setSubwayShapes(data);
+            } catch (err) {
+                console.error('Error fetching subway shapes:', err);
+            }
+        };
+        fetchShapes();
+    }, []);
 
     // Focus map on search params or user location when it becomes available
     useEffect(() => {
@@ -156,31 +174,33 @@ export default function Map() {
                 userInterfaceStyle={colorScheme}
                 ref={mapRef}
             >
+                {/* Render all station markers */}
                 {markers.map((marker) => (
-                    <Marker
-                        key={marker.station_id}
-                        coordinate={{
-                            latitude: parseFloat(marker.latitude),
-                            longitude: parseFloat(marker.longitude),
-                        }}
-                        title={marker.station_name}
-                        onPress={() => setSelectedStation(marker.station_id)}
-                    />
+                  <Marker
+                    key={marker.station_id}
+                    coordinate={{
+                      latitude: parseFloat(marker.latitude),
+                      longitude: parseFloat(marker.longitude),
+                    }}
+                    title={marker.station_name}
+                    onPress={() => setSelectedStation(marker.station_id)}
+                  />
                 ))}
-
-                {Object.entries(SUBWAY_LINES).map(([line, stops], i) => (
-                    <Polyline
-                        key={line}
-                        coordinates={stops.map(stop => ({
-                            latitude: parseFloat(stop.latitude),
-                            longitude: stop.longitude
-                        }))}
-                        strokeColor={LINE_COLORS[line] || '#000000'}
-                        strokeWidth={6}
-                        zIndex={i + 1}
-                        tappable={true}
-                    />
+                {/* Render all subway lines from GTFS shapes, using per-line color */}
+                {Object.entries(subwayShapes).map(([line, shapes], i) => (
+                    shapes.map((shape, j) => (
+                        <Polyline
+                            key={`${line}-${j}`}
+                            coordinates={shape.map(pt => ({ latitude: pt.lat, longitude: pt.lon }))}
+                            strokeColor={LINE_COLORS[line] || '#000000'}
+                            strokeWidth={6}
+                            zIndex={i + 1}
+                            tappable={true}
+                        />
+                    ))
                 ))}
+                {/* Keep the test marker for reference */}
+                <Marker coordinate={{ latitude: 40.7128, longitude: -74.0060 }} title="Test Marker" />
             </MapView>
             <View style={styles.searchContainer}>
                 <SearchButton />
@@ -217,5 +237,21 @@ const styles = StyleSheet.create({
     map: {
         width: '100%',
         height: '100%',
+    },
+    lineToggleContainer: {
+        flexDirection: 'row',
+        paddingTop: 10,
+        paddingBottom: 2,
+        backgroundColor: '#fff',
+        zIndex: 2,
+        borderBottomWidth: 1,
+        borderColor: '#eee',
+    },
+    lineMenuButton: {
+        marginLeft: 10,
+        padding: 4,
+        backgroundColor: '#f2f2f2',
+        borderRadius: 8,
+        alignSelf: 'flex-start',
     },
 }); 

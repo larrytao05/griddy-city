@@ -31,6 +31,8 @@ RUN npm install
 # Build the application
 RUN npx nx build backend --output-path=dist
 
+COPY apps/backend/src/app/db/scripts/gtfs_shapes_by_line.json /app/dist/apps/backend/src/app/db/scripts/gtfs_shapes_by_line.json
+
 # Set ownership
 RUN chown -R backend:backend .
 
