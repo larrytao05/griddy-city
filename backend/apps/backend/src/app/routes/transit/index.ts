@@ -3,6 +3,7 @@ import stopsRoutes from './stops';
 import tripsRoutes from './trips';
 import vehicles from './vehicles';
 import sync from './sync';
+import shapesRoutes from './shapes';
 
 export default async function (fastify: FastifyInstance) {
   // Register stops routes under /transit/stops
@@ -16,4 +17,7 @@ export default async function (fastify: FastifyInstance) {
   
   // Register sync routes under /transit/sync
   fastify.register(sync, { prefix: '/sync' });
+
+  // Register shapes routes under /transit/shapes
+  fastify.register(shapesRoutes, { prefix: '/shapes' });
 }

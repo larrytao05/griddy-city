@@ -3,6 +3,7 @@
   "devDependencies": {
     "@types/node": "^22.15.21",
     "@types/pg": "^8.15.2",
+    "expo-module-scripts": "^4.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },

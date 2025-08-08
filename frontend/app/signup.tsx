@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -8,14 +8,34 @@ import { SubwayLogo } from '@/components/SubwayLogo';
 
 export default function SignUp() {
   const { colors } = useThemeContext();
-  const { signUp } = useAuth();
+  const { signUp, isLoading, error, clearError } = useAuth();
   const router = useRouter();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Clear error when user starts typing
+  const handleNameChange = (text: string) => {
+    setName(text);
+    if (error) clearError();
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (error) clearError();
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    if (error) clearError();
+  };
+
+  const handleConfirmPasswordChange = (text: string) => {
+    setConfirmPassword(text);
+    if (error) clearError();
+  };
 
   const handleSignUp = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -33,19 +53,11 @@ export default function SignUp() {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const success = await signUp(email, password, name);
-      if (success) {
-        router.replace('/(tabs)/map');
-      } else {
-        Alert.alert('Error', 'Failed to create account. Please try again.');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
-    } finally {
-      setIsLoading(false);
+    const success = await signUp(email, password, name);
+    if (success) {
+      router.replace('/(tabs)/map');
     }
+    // Error handling is now done in AuthContext
   };
 
   const navigateToSignIn = () => {
@@ -75,16 +87,26 @@ export default function SignUp() {
             <Text style={[styles.subtitle, { color: colors.neutralSubtitle }]}>Join us for better transit</Text>
           </View>
 
-          <View style={[styles.inputContainer, { backgroundColor: colors.neutralMid, borderColor: `${colors.neutralOpposite}50` }]}>
-            <Ionicons name="person-outline" size={20} color={colors.neutralOpposite} />
+        <View style={styles.form}>
+          {/* Error Message Display */}
+          {error && (
+            <View style={[styles.errorContainer, { backgroundColor: '#FEE2E2', borderColor: '#EF4444' }]}>
+              <Ionicons name="alert-circle" size={20} color="#EF4444" />
+              <Text style={[styles.errorText, { color: '#EF4444' }]}>{error.message}</Text>
+            </View>
+          )}
+
+          <View style={[styles.inputContainer, { backgroundColor: '#0F4C75' }]}>
+            <Ionicons name="person-outline" size={20} color={colors.lightAccent} />
             <TextInput
               style={[styles.input, { color: colors.neutralOpposite }]}
               placeholder="Full Name"
               placeholderTextColor={colors.neutralOpposite}
               value={name}
-              onChangeText={setName}
+              onChangeText={handleNameChange}
               autoCapitalize="words"
               autoCorrect={false}
+              editable={!isLoading}
             />
           </View>
 
@@ -95,10 +117,11 @@ export default function SignUp() {
               placeholder="Email"
               placeholderTextColor={colors.neutralOpposite}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              editable={!isLoading}
             />
           </View>
 
@@ -109,9 +132,10 @@ export default function SignUp() {
               placeholder="Password"
               placeholderTextColor={colors.neutralOpposite}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={handlePasswordChange}
               secureTextEntry
               autoCapitalize="none"
+              editable={!isLoading}
             />
           </View>
 
@@ -122,9 +146,10 @@ export default function SignUp() {
               placeholder="Confirm Password"
               placeholderTextColor={colors.neutralOpposite}
               value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              onChangeText={handleConfirmPasswordChange}
               secureTextEntry
               autoCapitalize="none"
+              editable={!isLoading}
             />
           </View>
         </View>
@@ -135,8 +160,8 @@ export default function SignUp() {
             style={[
               styles.signUpButton, 
               { 
-                backgroundColor: isLoading ? '#6B7280' : colors.accent,
-                opacity: isLoading ? 0.6 : 1
+                backgroundColor: isFormComplete && !isLoading ? colors.accent : '#6B7280',
+                opacity: isFormComplete && !isLoading ? 1 : 0.6
               }
             ]}
             onPress={handleSignUp}
@@ -145,21 +170,21 @@ export default function SignUp() {
             <Text style={[
               styles.signUpText, 
               { 
-                color: '#FFFFFF'
+                color: isFormComplete && !isLoading ? '#FFFFFF' : '#E5E7EB',
+                fontWeight: isFormComplete && !isLoading ? 'bold' : 'normal'
               }
             ]}>
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </Text>
           </Pressable>
 
-          <View style={styles.footer}>
-            <Text style={[styles.footerText, { color: colors.neutralSubtitle }]}>
-              Already have an account?{' '}
-            </Text>
-            <Pressable onPress={navigateToSignIn}>
-              <Text style={[styles.linkText, { color: colors.secondaryAccent }]}>Sign In</Text>
-            </Pressable>
-          </View>
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, { color: colors.neutralSubtitle }]}>
+            Already have an account?{' '}
+          </Text>
+          <Pressable onPress={navigateToSignIn} disabled={isLoading}>
+            <Text style={[styles.linkText, { color: colors.accent }]}>Sign In</Text>
+          </Pressable>
         </View>
       </View>
     </TouchableWithoutFeedback>
@@ -194,6 +219,24 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
+  },
+  form: {
+    gap: 16,
+    marginBottom: 30,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
