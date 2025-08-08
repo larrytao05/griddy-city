@@ -63,20 +63,24 @@ export default function SignUp() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={[styles.container, { backgroundColor: colors.neutral }]}>
-        <View style={styles.header}>
+        {/* Logo Group */}
+        <View style={styles.logoGroup}>
           <SubwayLogo />
-          <Ionicons name="train" size={60} color={colors.accent} style={styles.trainIcon} />
-          <Text style={[styles.title, { color: colors.neutralOpposite }]}>Create Account</Text>
-          <Text style={[styles.subtitle, { color: colors.neutralSubtitle }]}>Join us for better transit</Text>
         </View>
 
-        <View style={styles.form}>
-          <View style={[styles.inputContainer, { backgroundColor: '#0F4C75' }]}>
-            <Ionicons name="person-outline" size={20} color={colors.lightAccent} />
+        {/* Header and Inputs Group */}
+        <View style={styles.formGroup}>
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: colors.neutralOpposite }]}>Create Account</Text>
+            <Text style={[styles.subtitle, { color: colors.neutralSubtitle }]}>Join us for better transit</Text>
+          </View>
+
+          <View style={[styles.inputContainer, { backgroundColor: colors.neutralMid, borderColor: `${colors.neutralOpposite}50` }]}>
+            <Ionicons name="person-outline" size={20} color={colors.neutralOpposite} />
             <TextInput
-              style={[styles.input, { color: '#FFFFFF' }]}
+              style={[styles.input, { color: colors.neutralOpposite }]}
               placeholder="Full Name"
-              placeholderTextColor={colors.lightAccent}
+              placeholderTextColor={colors.neutralOpposite}
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
@@ -84,12 +88,12 @@ export default function SignUp() {
             />
           </View>
 
-          <View style={[styles.inputContainer, { backgroundColor: '#0F4C75' }]}>
-            <Ionicons name="mail-outline" size={20} color={colors.lightAccent} />
+          <View style={[styles.inputContainer, { backgroundColor: colors.neutralMid, borderColor: `${colors.neutralOpposite}50` }]}>
+            <Ionicons name="mail-outline" size={20} color={colors.neutralOpposite} />
             <TextInput
-              style={[styles.input, { color: '#FFFFFF' }]}
+              style={[styles.input, { color: colors.neutralOpposite }]}
               placeholder="Email"
-              placeholderTextColor={colors.lightAccent}
+              placeholderTextColor={colors.neutralOpposite}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -98,12 +102,12 @@ export default function SignUp() {
             />
           </View>
 
-          <View style={[styles.inputContainer, { backgroundColor: '#0F4C75' }]}>
-            <Ionicons name="lock-closed-outline" size={20} color={colors.lightAccent} />
+          <View style={[styles.inputContainer, { backgroundColor: colors.neutralMid, borderColor: `${colors.neutralOpposite}50` }]}>
+            <Ionicons name="lock-closed-outline" size={20} color={colors.neutralOpposite} />
             <TextInput
-              style={[styles.input, { color: '#FFFFFF' }]}
+              style={[styles.input, { color: colors.neutralOpposite }]}
               placeholder="Password"
-              placeholderTextColor={colors.lightAccent}
+              placeholderTextColor={colors.neutralOpposite}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -111,25 +115,28 @@ export default function SignUp() {
             />
           </View>
 
-          <View style={[styles.inputContainer, { backgroundColor: '#0F4C75' }]}>
-            <Ionicons name="lock-closed-outline" size={20} color={colors.lightAccent} />
+          <View style={[styles.inputContainer, { backgroundColor: colors.neutralMid, borderColor: `${colors.neutralOpposite}50` }]}>
+            <Ionicons name="lock-closed-outline" size={20} color={colors.neutralOpposite} />
             <TextInput
-              style={[styles.input, { color: '#FFFFFF' }]}
+              style={[styles.input, { color: colors.neutralOpposite }]}
               placeholder="Confirm Password"
-              placeholderTextColor={colors.lightAccent}
+              placeholderTextColor={colors.neutralOpposite}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
               autoCapitalize="none"
             />
           </View>
+        </View>
 
+        {/* Button and Footer Group */}
+        <View style={styles.buttonFooterGroup}>
           <Pressable
             style={[
               styles.signUpButton, 
               { 
-                backgroundColor: isFormComplete ? colors.accent : '#6B7280',
-                opacity: isFormComplete ? 1 : 0.6
+                backgroundColor: isLoading ? '#6B7280' : colors.accent,
+                opacity: isLoading ? 0.6 : 1
               }
             ]}
             onPress={handleSignUp}
@@ -138,22 +145,21 @@ export default function SignUp() {
             <Text style={[
               styles.signUpText, 
               { 
-                color: isFormComplete ? '#FFFFFF' : '#E5E7EB',
-                fontWeight: isFormComplete ? 'bold' : 'normal'
+                color: '#FFFFFF'
               }
             ]}>
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </Text>
           </Pressable>
-        </View>
 
-        <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: colors.neutralSubtitle }]}>
-            Already have an account?{' '}
-          </Text>
-          <Pressable onPress={navigateToSignIn}>
-            <Text style={[styles.linkText, { color: colors.accent }]}>Sign In</Text>
-          </Pressable>
+          <View style={styles.footer}>
+            <Text style={[styles.footerText, { color: colors.neutralSubtitle }]}>
+              Already have an account?{' '}
+            </Text>
+            <Pressable onPress={navigateToSignIn}>
+              <Text style={[styles.linkText, { color: colors.secondaryAccent }]}>Sign In</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </TouchableWithoutFeedback>
@@ -163,32 +169,38 @@ export default function SignUp() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 32,
+    justifyContent: 'space-between'
+  },
+  logoGroup: {
+    alignItems: 'center',
+  },
+  formGroup: {
+    gap: 16,
+  },
+  buttonFooterGroup: {
+    gap: 12,
+    marginTop: 100
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 0,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 8,
+    fontWeight: 'bold'
   },
   subtitle: {
     fontSize: 16,
   },
-  form: {
-    gap: 16,
-    marginBottom: 30,
-  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    padding: 12,
     borderRadius: 8,
+    borderWidth: 1,
     gap: 12,
   },
   input: {
@@ -199,7 +211,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 8,
   },
   signUpText: {
     fontSize: 18,
@@ -215,9 +226,6 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 16,
-    fontWeight: '600',
-  },
-  trainIcon: {
-    marginBottom: 20,
+    fontWeight: '500'
   },
 });

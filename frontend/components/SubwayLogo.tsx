@@ -97,8 +97,8 @@ const styles = StyleSheet.create({
     width: 356, // Same width as GRIDDY container
   },
   circle: {
-    width: 56,
-    height: 56,
+    width: 54,
+    height: 54,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',

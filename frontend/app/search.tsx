@@ -39,7 +39,7 @@ export default function SearchScreen() {
                 //IMPORTANT: If you're testing the frontend on your phone, replace localhost
                 //with your computer's ip address. That's the only way the backend will work.
                 //You may also need to allow the backend past your computers firewall like I did
-                const url = `http://localhost:3000/search/autocomplete?${params}`;
+                const url = `http://${process.env.EXPO_PUBLIC_API_IP}:3000/search/autocomplete?${params}`;
                 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
@@ -86,7 +86,7 @@ export default function SearchScreen() {
 
         try {
             //TODO: Make url private/add API key auth
-            const url = `http://localhost:3000/search/geocode?${params.toString()}`;
+            const url = `http://${process.env.EXPO_PUBLIC_API_IP}:3000/search/geocode?${params.toString()}`;
 
             const response = await fetch(url);
 
