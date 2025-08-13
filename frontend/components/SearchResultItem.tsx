@@ -1,14 +1,7 @@
 import { View, StyleSheet, Pressable, Text, Animated, ActivityIndicator } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
 import { useRef, useState } from 'react';
-
-export interface SearchResult {
-    name: string;
-    mapbox_id: string;
-    feature_type: string;
-    address: string;
-    full_address: string;
-}
+import { SearchResult } from '../types';
 
 interface SearchResultItemProps {
     item: SearchResult;

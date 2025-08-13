@@ -1,11 +1,16 @@
 import { View, StyleSheet, TextInput, Pressable, Text, FlatList, Animated } from 'react-native';
-import { useThemeContext } from '@/context/ThemeContext';
+import { useState, useCallback, useRef } from 'react';
+
 import { getColors } from '@/constants/ThemeColors';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useCallback, useRef } from 'react';
+import { SearchResult } from '../types';
+import { SearchResultItem } from '@/components/SearchResultItem';
+
 import { useLocation } from '@/context/LocationContext';
-import { SearchResultItem, SearchResult } from '@/components/SearchResultItem';
+import { useThemeContext } from '@/context/ThemeContext';
+import { useSearchContext } from '@/context/SearchContext';
+
 
 type SearchType = 'location' | 'station';
 
@@ -18,7 +23,7 @@ export default function SearchScreen() {
     const [searchType, setSearchType] = useState<SearchType>('location');
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-    const [isRedirecting, setIsRedirecting] = useState(false);
+    const { setSelectedLocation } = useSearchContext();
 
     // Debounced search function
     const debouncedSearch = useCallback(
@@ -36,13 +41,10 @@ export default function SearchScreen() {
                     params.append('lng', userLocation.lng.toString());
                 }
 
-                //IMPORTANT: If you're testing the frontend on your phone, replace localhost
-                //with your computer's ip address. That's the only way the backend will work.
-                //You may also need to allow the backend past your computers firewall like I did
-                const url = `http://${process.env.EXPO_PUBLIC_API_IP}:3000/search/autocomplete?${params}`;
+                const url = `http://${process.env.EXPO_PUBLIC_API_IP}/search/autocomplete?${params}`;
                 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
                 
                 const response = await fetch(url, {
                     signal: controller.signal
@@ -53,8 +55,8 @@ export default function SearchScreen() {
                     throw new Error(`Search failed with status: ${response.status}`);
                 }
 
-                const data = await response.json();
-                setSearchResults(data.suggestions || []);
+                const suggestions = await response.json();
+                setSearchResults(suggestions);
             } catch (error) {
                 console.error('Search error:', error);
                 setSearchResults([]);
@@ -73,43 +75,22 @@ export default function SearchScreen() {
 
     // Handle result selection
     const handleResultSelect = async (result: SearchResult) => {
-        setIsRedirecting(true);
-        const params = new URLSearchParams({
-            address: result.address,
-            name: result.address 
-        });
-
-        if (userLocation) {
-            params.append('lat', String(userLocation.lat));
-            params.append('lng', String(userLocation.lng));
-        }
+        const params = new URLSearchParams({ q: result.mapbox_id });
 
         try {
-            //TODO: Make url private/add API key auth
-            const url = `http://${process.env.EXPO_PUBLIC_API_IP}:3000/search/geocode?${params.toString()}`;
-
+            const url = `http://${process.env.EXPO_PUBLIC_API_IP}/search/retrieve?${params.toString()}`;
             const response = await fetch(url);
 
             if (!response.ok) {
-                throw new Error(`Geocode failed with status: ${response.status}`);
+                throw new Error(`Retrieval failed with status: ${response.status}`);
             }
 
             const data = await response.json()
+            setSelectedLocation(data);
 
-            router.push({
-                pathname: '/(tabs)/map',
-                params: {
-                    id: result.mapbox_id,
-                    lat: data.coordinates[1],
-                    lng: data.coordinates[0],
-                    address: result.address,
-                    name: result.name
-                }
-            });
+            router.push({ pathname: '/(tabs)/map' });
         } catch (error) {
-            console.error('Geocode error: ', error);
-        } finally {
-            setIsRedirecting(false);
+            console.error(error);
         }
     };
 

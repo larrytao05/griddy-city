@@ -10,6 +10,7 @@ import { Animated } from 'react-native';
 //Contexts
 import { useThemeContext } from '@/context/ThemeContext';
 import { useLocation } from '@/context/LocationContext';
+import { useSearchContext } from '@/context/SearchContext';
 //Maps/Subway
 import { markers } from '@/assets/markers';
 import { LINE_COLORS } from '@/assets/subway-lines';
@@ -67,28 +68,20 @@ const mapStyle = [
   }
 ];
 
-interface LocationProps{
-    name: string,
-    address: string,
-    lat: number,
-    lng: number,
-}
-
 export default function Map() {
     const mapRef = useRef<MapView>(null);
     const [selectedStation, setSelectedStation] = useState<string | null>(null);
     const { colors, colorScheme } = useThemeContext();
     const { userLocation } = useLocation();
-    const [searchParams, setSearchParams] = useState(useLocalSearchParams());
-    const [selectedLocation, setSelectedLocation] = useState<LocationProps | null>(null);
-    const router = useRouter();
-    // New state for subway shapes
+    const { selectedLocation, clearSelectedLocation } = useSearchContext();
     const [subwayShapes, setSubwayShapes] = useState<Record<string, { lat: number; lon: number }[][]>>({});
+    const router = useRouter();
+
     // Fetch subway shapes from backend
     useEffect(() => {
         const fetchShapes = async () => {
             try {
-                const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/transit/shapes`);
+                const response = await fetch(`http://${process.env.EXPO_PUBLIC_API_IP}/transit/shapes`);
                 if (!response.ok) throw new Error('Failed to fetch subway shapes');
                 const data = await response.json();
                 setSubwayShapes(data);
@@ -102,21 +95,14 @@ export default function Map() {
     // Focus map on search params or user location when it becomes available
     useEffect(() => {
         if (mapRef.current) {
-            if (searchParams.lat && searchParams.lng && searchParams.address) {
+            if (selectedLocation) {
                 const newRegion = {
-                    latitude: Number(searchParams.lat),
-                    longitude: Number(searchParams.lng),
+                    latitude: Number(selectedLocation.lat),
+                    longitude: Number(selectedLocation.lng),
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.01,
                 };
                 focusMap(newRegion)
-
-                setSelectedLocation({
-                    name: searchParams.name as string || 'Unknown Location',
-                    address: searchParams.address as string,
-                    lat: Number(searchParams.lat),
-                    lng: Number(searchParams.lng),
-                });
             }
             else if (userLocation) {
                 const newRegion = {
@@ -129,7 +115,7 @@ export default function Map() {
             }
             else focusMap(initialRegion);
         }
-    }, [userLocation, searchParams]);
+    }, [userLocation, selectedLocation]);
 
     const focusMap = (region: Region) => {
         if (mapRef.current) {
@@ -143,15 +129,6 @@ export default function Map() {
     const onRegionChange = () => {
         focusMap(initialRegion);
     };
-
-    const onLocationModalClose = () => {
-        //Reset selected location
-        setSelectedLocation(null);
-
-        //Reset url and stored params
-        router.setParams({});
-        setSearchParams({});
-    }
 
     return (
         <View style={styles.container}>
@@ -205,10 +182,7 @@ export default function Map() {
             <View style={styles.searchContainer}>
                 <SearchButton />
             </View>
-            <LocationModal
-                location={selectedLocation}
-                onClose={onLocationModalClose}
-            />
+            <LocationModal location={selectedLocation}/>
         </View>
     );
 }

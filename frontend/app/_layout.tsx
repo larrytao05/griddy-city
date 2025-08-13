@@ -1,8 +1,11 @@
+import { View, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
+// Contexts
 import { ThemeProvider } from '../context/ThemeContext';
 import { LocationProvider } from '@/context/LocationContext';
 import { AuthProvider } from '@/context/AuthContext';
-import { View, StyleSheet } from 'react-native';
+import { SearchProvider } from '@/context/SearchContext';
+
 
 function RootLayoutNav() {
   return (
@@ -52,11 +55,13 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <LocationProvider>
-          <RootLayoutNav />
-        </LocationProvider>
-      </ThemeProvider>
+      <LocationProvider>
+        <ThemeProvider>
+          <SearchProvider>
+            <RootLayoutNav />
+          </SearchProvider>
+        </ThemeProvider>
+      </LocationProvider>
     </AuthProvider>
   );
 }
