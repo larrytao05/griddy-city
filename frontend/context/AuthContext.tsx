@@ -38,7 +38,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          console.log('Found existing session for:', session.user.email);
           setUser({
             id: session.user.id,
             email: session.user.email!,
@@ -57,8 +56,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener for real-time auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        
         try {
           if (session?.user) {
             // User is authenticated - update user state
@@ -90,7 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('Attempting sign in for:', email);
       
       // Use real Supabase sign in
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -123,7 +119,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
       
-      console.log('Sign in successful for:', data.user?.email);
       return !!data.user;
       
     } catch (error) {
@@ -142,7 +137,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('Attempting sign up for:', email, 'with name:', name);
       
       // Use real Supabase sign up
       const { data, error } = await supabase.auth.signUp({
@@ -180,7 +174,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
       
-      console.log('Sign up successful for:', data.user?.email);
       return !!data.user;
       
     } catch (error) {

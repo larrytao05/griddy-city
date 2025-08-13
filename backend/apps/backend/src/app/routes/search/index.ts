@@ -21,7 +21,6 @@ export interface Location {
 }
 
 export default async function (fastify: FastifyInstance) {
-    //Autocomplete using SearchBox API
     fastify.get('/autocomplete', async (request, reply) => {
         const { q, session_token, lat, lng } = request.query as { 
             q?: string 

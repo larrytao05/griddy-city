@@ -24,8 +24,7 @@ export default function Profile() {
   useEffect(() => {
     console.log('Profile page loaded - testing Supabase connection...');
     if (supabase) {
-      supabase.auth.getSession().then(({ data, error }: any) => {
-        console.log('Supabase connection test:', data, error);
+      supabase.auth.getSession().then(({ error }: any) => {
         if (error) {
           console.error('Supabase connection failed:', error);
         } else {
