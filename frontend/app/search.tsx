@@ -4,7 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { getColors } from '@/constants/ThemeColors';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SearchResult } from '../types';
+import { SearchResult } from '@/types';
 import { SearchResultItem } from '@/components/SearchResultItem';
 
 import { useLocation } from '@/context/LocationContext';
