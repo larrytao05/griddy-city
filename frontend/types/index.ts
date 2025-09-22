@@ -1,7 +1,15 @@
 export interface SearchResult {
-  name: string;
+  mapbox_id: string
+  name: string
+  address: string
+}
+
+export interface Location {
   mapbox_id: string;
-  feature_type: string;
+  name: string;
   address: string;
-  full_address: string;
+  place: string;
+  lat: number;
+  lng: number;
+  attribution: string;
 }

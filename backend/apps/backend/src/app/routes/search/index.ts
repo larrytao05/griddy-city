@@ -20,6 +20,8 @@ export interface Location {
     attribution: string;
 }
 
+const CACHE_TTL_SECONDS = 300;
+
 export default async function (fastify: FastifyInstance) {
     fastify.get('/autocomplete', async (request, reply) => {
         const { q, session_token, lat, lng } = request.query as { 
@@ -51,6 +53,12 @@ export default async function (fastify: FastifyInstance) {
             params.append('proximity', '-74.006,40.7128');
         }
 
+        // Check if search query is already in cache
+        const bucket = (n? : string) => n ? Number.parseFloat(n).toFixed(2) : 'na';
+        const cacheKey = `search:autocomplete:${q.toLowerCase().trim()}:${bucket(lat)}:${bucket(lng)}`;
+        const cached = await fastify.cache.getSearchResults(cacheKey);
+        if (cached) return cached;
+
         const url = `https://api.mapbox.com/search/searchbox/v1/suggest?${params.toString()}`;
         try {
             const { data } = await axios.get(url);
@@ -70,6 +78,8 @@ export default async function (fastify: FastifyInstance) {
                 suggestions.push(result);
             });
 
+            // Add results to cache
+            await fastify.cache.setSearchResults(cacheKey, suggestions, CACHE_TTL_SECONDS);
             return suggestions;
         } catch (error) {
             return reply.status(502).send({ error: 'Failed to fetch from Mapbox autocomplete endpoint' });
@@ -90,6 +100,11 @@ export default async function (fastify: FastifyInstance) {
             access_token: MAPBOX_TOKEN,
             session_token: sessionToken,
         });
+
+        // Check cache
+        const cacheKey = `search:retrieve:${q.toLowerCase().trim()}`
+        const cached = await fastify.cache.getLocation(cacheKey);
+        if (cached) return cached;
 
         const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${q}?${params.toString()}`;
 
@@ -115,6 +130,8 @@ export default async function (fastify: FastifyInstance) {
                 attribution: data.attribution
             }
 
+            // Add to cache
+            await fastify.cache.setLocation(cacheKey, location, CACHE_TTL_SECONDS);
             return location;
         } catch (error) {
             return reply.status(502).send({ error: 'Failed to fetch from Mapbox retrieve endpoint'});

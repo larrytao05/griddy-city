@@ -73,7 +73,7 @@ export default function Map() {
     const [selectedStation, setSelectedStation] = useState<string | null>(null);
     const { colors, colorScheme } = useThemeContext();
     const { userLocation } = useLocation();
-    const { selectedLocation, clearSelectedLocation } = useSearchContext();
+    const { selectedLocation } = useSearchContext();
     const [subwayShapes, setSubwayShapes] = useState<Record<string, { lat: number; lon: number }[][]>>({});
     const router = useRouter();
 
@@ -81,7 +81,7 @@ export default function Map() {
     useEffect(() => {
         const fetchShapes = async () => {
             try {
-                const response = await fetch(`http://${process.env.EXPO_PUBLIC_API_IP}/transit/shapes`);
+                const response = await fetch(`http://${process.env.EXPO_PUBLIC_BACKEND_URL}/transit/shapes`);
                 if (!response.ok) throw new Error('Failed to fetch subway shapes');
                 const data = await response.json();
                 setSubwayShapes(data);

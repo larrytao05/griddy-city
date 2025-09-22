@@ -12,6 +12,14 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/apps/backend/db/init:/docker-entrypoint-initdb.d
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
   backend:
     build:
       context: ./backend
@@ -20,10 +28,13 @@ services:
       - "3000:3000"
     environment:
       - DATABASE_URL=postgres://larrytao:griddy@database:5432/griddy-city
+      - REDIS_URL=redis://redis:6379
     env_file:
     - ./backend/apps/backend/.env
     depends_on:
       - database
+      - redis
 
 volumes:
   postgres_data: 
+  redis_data:

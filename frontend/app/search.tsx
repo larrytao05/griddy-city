@@ -41,7 +41,7 @@ export default function SearchScreen() {
                     params.append('lng', userLocation.lng.toString());
                 }
 
-                const url = `http://${process.env.EXPO_PUBLIC_API_IP}/search/autocomplete?${params}`;
+                const url = `http://${process.env.EXPO_PUBLIC_BACKEND_URL}/search/autocomplete?${params}`;
                 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -78,7 +78,7 @@ export default function SearchScreen() {
         const params = new URLSearchParams({ q: result.mapbox_id });
 
         try {
-            const url = `http://${process.env.EXPO_PUBLIC_API_IP}/search/retrieve?${params.toString()}`;
+            const url = `http://${process.env.EXPO_PUBLIC_BACKEND_URL}/search/retrieve?${params.toString()}`;
             const response = await fetch(url);
 
             if (!response.ok) {
